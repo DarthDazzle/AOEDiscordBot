@@ -58,9 +58,12 @@ files = {}
 for (dirpath, dirnames, filenames) in walk(dir_path):
     
     for f in filenames:
-        if f.split(".")[1] == "ogg":
-            number = f.split("_")[0]
-            files[number] = f
+        try:
+            if f.split(".")[1] == "ogg":
+                number = f.split("_")[0]
+                files[number] = f
+        except:
+            print(f)
 
 bot.add_cog(Taunter(bot, files))
 bot.run(TOKEN)
