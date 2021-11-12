@@ -44,8 +44,8 @@ class Taunter(commands.Cog):
                 user_timeouts[username] = datetime.today().timestamp() + 10
             await message.delete()
 
-bot = commands.Bot(command_prefix=commands.when_mentioned_or("!"),
-                   description='Wololo')
+bot = commands.Bot(command_prefix='!', help_command=None)
+
 
 @bot.event
 async def on_ready():
@@ -63,7 +63,24 @@ for (dirpath, dirnames, filenames) in walk(dir_path):
                 number = f.split("_")[0]
                 files[number] = f
         except:
-            print(f)
+            f = f
+            #print(f)
+
+@bot.command()
+async def taunts(context):
+    text = "Available Taunts: \n ```"
+    for i in range(999):
+        if str(i) in files:
+            
+            if len(text + files[str(i)]) > 2000:
+                await context.author.send(text + "```")
+                text = "```"
+            command = files[str(i)].split(".")[0].split("_")[1]
+            numb = files[str(i)].split("_")[0] + ":"
+            for j in range(4-len(numb)):
+                numb = numb + " "
+            text +=  numb  + command + "\n"
+    await context.author.send(text + "```")
 
 bot.add_cog(Taunter(bot, files))
 bot.run(TOKEN)
