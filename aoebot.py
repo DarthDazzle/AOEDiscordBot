@@ -13,6 +13,8 @@ client = discord.Client()
 async def deevee(message):
     time.sleep(36)
     await message.channel.send("<:nolove:908730069936132178>")
+    time.sleep(30)
+    await message.channel.send("<:dignified:908735166510411776>")
 
 user_timeouts = {}
 @client.event
@@ -49,7 +51,7 @@ class Taunter(commands.Cog):
             if username not in user_timeouts:
                 self.vc.play(discord.FFmpegPCMAudio(self.files[message.content]))
                 if(message.content == str(422)):
-                    asyncio.create_task(deevee(message)) 
+                    await asyncio.create_task(deevee(message)) 
                 user_timeouts[username] = datetime.today().timestamp() + 10
             await message.delete()
 
