@@ -96,10 +96,8 @@ async def taunts(context):
 
 @bot.command()
 async def taunts(context):
-    context.channel.send('Aunts. Aunts. Aunts:', {
-        files: [
-            "./aunts.jpg"
-        ]
-    });
+    with open('aunts.jpg', 'rb') as f:
+        picture = discord.File(f)
+        await context.channel.send(file=picture)
 bot.add_cog(Taunter(bot, files))
 bot.run(TOKEN)
