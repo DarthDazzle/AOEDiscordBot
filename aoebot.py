@@ -98,7 +98,7 @@ async def taunts(context):
 async def taunts(context):
     context.channel.send('Aunts. Aunts. Aunts:', {
         files: [
-            "./aunts.png"
+            "./aunts.jpg"
         ]
     });
 bot.add_cog(Taunter(bot, files))
