@@ -3,10 +3,16 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 from os import walk
-
+from threading import Timer
+import time
+import asyncio
 TOKEN = 'OTA0MDQwODE3OTY1MDMxNDY0.YX1vnw.Lufg5d0TqGZWbsr2VbwMFIs-2jM'
 #https://discord.com/api/oauth2/authorize?client_id=904040817965031464&permissions=2172928&scope=bot
 client = discord.Client()
+
+async def deevee(message):
+    time.sleep(36)
+    await message.channel.send("<:nolove:908730069936132178>")
 
 user_timeouts = {}
 @client.event
@@ -26,6 +32,7 @@ class Taunter(commands.Cog):
         if(message.content.isdigit()):
             if message.author.voice == None:
                 await message.author.send("Joina en voice channel din tönt!")
+                await message.delete()
                 return
             if not self.vc:
                 self.vc = await message.author.voice.channel.connect()
@@ -41,6 +48,8 @@ class Taunter(commands.Cog):
                     await message.author.send("Chilla fan")
             if username not in user_timeouts:
                 self.vc.play(discord.FFmpegPCMAudio(self.files[message.content]))
+                if(message.content == str(422)):
+                    asyncio.create_task(deevee(message)) 
                 user_timeouts[username] = datetime.today().timestamp() + 10
             await message.delete()
 
