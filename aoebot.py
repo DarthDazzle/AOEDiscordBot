@@ -95,9 +95,22 @@ async def taunts(context):
     await context.author.send(text + "```")
 
 @bot.command()
-async def taunts(context):
+async def aunts(context):
     with open('aunts.jpg', 'rb') as f:
         picture = discord.File(f)
         await context.channel.send(file=picture)
+
+@bot.command()
+async def AUNTS(context):
+    with open('aunts.jpg', 'rb') as f:
+        picture = discord.File(f)
+        await context.channel.send(file=picture)
+        
+@bot.command()
+async def Aunts(context):
+    with open('aunts.jpg', 'rb') as f:
+        picture = discord.File(f)
+        await context.channel.send(file=picture)
+        
 bot.add_cog(Taunter(bot, files))
 bot.run(TOKEN)
