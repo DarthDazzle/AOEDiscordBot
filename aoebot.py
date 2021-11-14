@@ -111,6 +111,7 @@ async def Aunts(context):
     with open('aunts.jpg', 'rb') as f:
         picture = discord.File(f)
         await context.channel.send(file=picture)
-        
+
 bot.add_cog(Taunter(bot, files))
+
 bot.run(TOKEN)
