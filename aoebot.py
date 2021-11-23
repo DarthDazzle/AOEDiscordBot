@@ -80,7 +80,6 @@ class Taunter(commands.Cog):
             if username not in user_timeouts:
                 self.vc.play(discord.FFmpegPCMAudio("suntzu/" + random.choice(self.suntzus)))
                 user_timeouts[username] = datetime.today().timestamp() + 10
-            await message.delete()
 
 bot = commands.Bot(command_prefix='!', help_command=None)
 
