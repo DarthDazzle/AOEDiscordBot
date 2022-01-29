@@ -13,10 +13,10 @@ TOKEN = 'OTA0MDQwODE3OTY1MDMxNDY0.YX1vnw.Lufg5d0TqGZWbsr2VbwMFIs-2jM'
 client = discord.Client()
 
 async def deevee(message):
-    #time.sleep(36)
-    #await message.channel.send("<:nolove:908730069936132178>")
-    #time.sleep(30)
-    #await message.channel.send("<:dignified:908735166510411776>")
+    time.sleep(36)
+    await message.channel.send("<:nolove:908730069936132178>")
+    time.sleep(30)
+    await message.channel.send("<:dignified:908735166510411776>")
     print("lol")
 
 user_timeouts = {}
@@ -158,19 +158,7 @@ for (dirpath, dirnames, filenames) in walk(dir_path):
             f = f
             #print(f)
 
-dir_path = os.getcwd() + "/shanties/"
-shanties = {}
-i = 0
-for (dirpath, dirnames, filenames) in walk(dir_path):
-    
-    for f in filenames:
-        try:
-            if f.split(".")[1] == "mp3":
-                shanties[i] = f
-                i += 1
-        except:
-            f = f
-            #print(f)
+
 f = []
 dir_path = os.getcwd() + "/taunts/"
 print(dir_path)
@@ -186,6 +174,6 @@ for (dirpath, dirnames, filenames) in walk(dir_path):
             f = f
             #print(f)
 
-bot.add_cog(Taunter(bot, files, suntzu, shanties))
+bot.add_cog(Taunter(bot, files, suntzu))
 
 bot.run(TOKEN)
