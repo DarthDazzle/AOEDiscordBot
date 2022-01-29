@@ -27,12 +27,11 @@ async def on_ready():
 
 
 class Taunter(commands.Cog):
-    def __init__(self, bot, files, suntzus, shanties):
+    def __init__(self, bot, files, suntzus):
         self.bot = bot
         self.vc = None
         self.files = files
         self.suntzus = suntzus
-        self.shanties = shanties
         
 
 
@@ -80,26 +79,6 @@ class Taunter(commands.Cog):
                     await message.author.send("Chilla fan")
             if username not in user_timeouts:
                 self.vc.play(discord.FFmpegPCMAudio("suntzu/" + random.choice(self.suntzus)))
-                user_timeouts[username] = datetime.today().timestamp() + 10
-        if "shanties" in message.content:
-            if message.author.voice == None:
-                await message.author.send("Joina en voice channel din tönt!")
-                await message.delete()
-                return
-            if not self.vc:
-                self.vc = await message.author.voice.channel.connect()
-            elif(self.vc.channel != message.author.voice.channel):
-                if self.vc:
-                    await self.vc.disconnect()
-                self.vc = await message.author.voice.channel.connect()
-            username = str(message.author).split('#')[0]
-            if username in user_timeouts:
-                if user_timeouts[username] < datetime.today().timestamp():
-                    user_timeouts.pop(username)
-                else:
-                    await message.author.send("Chilla fan")
-            if username not in user_timeouts:
-                self.vc.play(discord.FFmpegPCMAudio("shanties/" + random.choice(self.shanties)))
                 user_timeouts[username] = datetime.today().timestamp() + 10
 
 bot = commands.Bot(command_prefix='!', help_command=None)
@@ -157,7 +136,6 @@ for (dirpath, dirnames, filenames) in walk(dir_path):
         except:
             f = f
             #print(f)
-
 
 f = []
 dir_path = os.getcwd() + "/taunts/"
