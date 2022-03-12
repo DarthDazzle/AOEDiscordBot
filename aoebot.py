@@ -56,9 +56,7 @@ class Taunter(commands.Cog):
                     await message.author.send("Chilla fan")
             if username not in user_timeouts:
                 self.vc.play(discord.FFmpegPCMAudio("taunts/" + self.files[message.content]))
-                if(message.content == str(422)):
-                    await asyncio.create_task(deevee(message)) 
-                user_timeouts[username] = datetime.today().timestamp() + 10
+                user_timeouts[username] = datetime.today().timestamp() + 5
             await message.delete()
         if "sun tzu" in message.content:
             if message.author.voice == None:
@@ -142,7 +140,6 @@ dir_path = os.getcwd() + "/taunts/"
 print(dir_path)
 files = {}
 for (dirpath, dirnames, filenames) in walk(dir_path):
-    
     for f in filenames:
         try:
             if f.split(".")[1] == "ogg":
