@@ -12,12 +12,6 @@ TOKEN = 'OTA0MDQwODE3OTY1MDMxNDY0.YX1vnw.Lufg5d0TqGZWbsr2VbwMFIs-2jM'
 #https://discord.com/api/oauth2/authorize?client_id=904040817965031464&permissions=2172928&scope=bot
 client = discord.Client()
 
-async def deevee(message):
-    time.sleep(36)
- #   await message.channel.send("<:nolove:908730069936132178>")
- #   time.sleep(30)
- #   await message.channel.send("<:dignified:908735166510411776>")
- #   print("lol")
 
 user_timeouts = {}
 @client.event
