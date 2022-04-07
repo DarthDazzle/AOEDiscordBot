@@ -136,7 +136,7 @@ files = {}
 for (dirpath, dirnames, filenames) in walk(dir_path):
     for f in filenames:
         try:
-            if f.split(".")[1] == "ogg":
+            if f.split(".")[1] == "ogg" or f.split(".")[1] == "mp3":
                 number = f.split("_")[0]
                 files[number] = f
         except:
