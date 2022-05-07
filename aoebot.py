@@ -98,6 +98,12 @@ async def aunts(context):
         await context.channel.send(file=picture)
 
 @bot.command()
+async def taints(context):
+    with open('taints.mp4', 'rb') as f:
+        picture = discord.File(f)
+        await context.channel.send(file=picture)
+
+@bot.command()
 async def AUNTS(context):
     with open('aunts.jpg', 'rb') as f:
         picture = discord.File(f)
