@@ -127,7 +127,7 @@ async def skapa(context, args):
     await context.channel.send("Skapar Fantastiska Bilder!")
     response = openai.Image.create(
         prompt=args,
-        n=4,
+        n=1,
         size="1024x1024"
     )
     allImgs = response["data"]
