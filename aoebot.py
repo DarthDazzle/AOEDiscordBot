@@ -11,13 +11,14 @@ import openai
 import requests
 from dotenv import load_dotenv
 
+
+#https://discord.com/api/oauth2/authorize?client_id=904040817965031464&permissions=2172928&scope=bot
+client = discord.Client()
+
 load_dotenv()
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 TOKEN = os.getenv('DISCORD_API')
-
-#https://discord.com/api/oauth2/authorize?client_id=904040817965031464&permissions=2172928&scope=bot
-client = discord.Client()
 
 user_timeouts = {}
 @client.event
@@ -123,6 +124,7 @@ async def Aunts(context):
 
 @bot.command()
 async def skapa(context, args):
+    await context.channel.send("Skapar Fantastiska Bilder!")
     response = openai.Image.create(
         prompt=args,
         n=4,
@@ -139,7 +141,7 @@ async def skapa(context, args):
     for i in range(4):
         with open('temp_dalle_{0}.jpg'.format(i), 'rb') as f:
             files_to_send.append(discord.File(f))
-    await context.channel.send(file=files_to_send)
+    await context.channel.send(files=files_to_send)
 
 @bot.event
 async def on_ready():
