@@ -7,11 +7,17 @@ from threading import Timer
 import time
 import asyncio
 import random
+import openai
+import requests
+from dotenv import load_dotenv
 
-TOKEN = 'OTA0MDQwODE3OTY1MDMxNDY0.YX1vnw.Lufg5d0TqGZWbsr2VbwMFIs-2jM'
+load_dotenv()
+
+openai.api_key = os.getenv("OPENAI_API_KEY")
+TOKEN = os.getenv('DISCORD_API')
+
 #https://discord.com/api/oauth2/authorize?client_id=904040817965031464&permissions=2172928&scope=bot
 client = discord.Client()
-
 
 user_timeouts = {}
 @client.event
@@ -112,6 +118,20 @@ async def AUNTS(context):
 @bot.command()
 async def Aunts(context):
     with open('aunts.jpg', 'rb') as f:
+        picture = discord.File(f)
+        await context.channel.send(file=picture)
+
+@bot.command()
+async def skapa(context, args):
+    response = openai.Image.create(
+        prompt=args,
+        n=1,
+        size="1024x1024"
+    )
+    img_data = requests.get(response["data"][0]["url"]).content
+    with open('image_name.jpg', 'wb') as handler:
+        handler.write(img_data)
+    with open('image_name.jpg', 'rb') as f:
         picture = discord.File(f)
         await context.channel.send(file=picture)
 
