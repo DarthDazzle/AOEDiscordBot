@@ -124,11 +124,12 @@ async def Aunts(context):
 
 @bot.command()
 async def skapa(context, args):
+    nn = 1
     try:
         await context.channel.send("Skapar Fantastiska Bilder!")
         response = openai.Image.create(
             prompt=args,
-            n=1,
+            n=nn,
             size="1024x1024"
         )
         allImgs = response["data"]
@@ -139,7 +140,7 @@ async def skapa(context, args):
                 handler.write(img_data)
             i = i + 1
         files_to_send: list[discord.File] = []
-        for i in range(4):
+        for i in range(nn):
             with open('temp_dalle_{0}.jpg'.format(i), 'rb') as f:
                 files_to_send.append(discord.File(f))
         await context.channel.send(files=files_to_send)
