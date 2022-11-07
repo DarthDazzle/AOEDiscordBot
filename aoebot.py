@@ -124,24 +124,27 @@ async def Aunts(context):
 
 @bot.command()
 async def skapa(context, args):
-    await context.channel.send("Skapar Fantastiska Bilder!")
-    response = openai.Image.create(
-        prompt=args,
-        n=1,
-        size="1024x1024"
-    )
-    allImgs = response["data"]
-    i = 0
-    for img in allImgs:
-        img_data = requests.get(img["url"]).content
-        with open('temp_dalle_{0}.jpg'.format(i), 'wb') as handler:
-            handler.write(img_data)
-        i = i + 1
-    files_to_send: list[discord.File] = []
-    for i in range(4):
-        with open('temp_dalle_{0}.jpg'.format(i), 'rb') as f:
-            files_to_send.append(discord.File(f))
-    await context.channel.send(files=files_to_send)
+    try:
+        await context.channel.send("Skapar Fantastiska Bilder!")
+        response = openai.Image.create(
+            prompt=args,
+            n=1,
+            size="1024x1024"
+        )
+        allImgs = response["data"]
+        i = 0
+        for img in allImgs:
+            img_data = requests.get(img["url"]).content
+            with open('temp_dalle_{0}.jpg'.format(i), 'wb') as handler:
+                handler.write(img_data)
+            i = i + 1
+        files_to_send: list[discord.File] = []
+        for i in range(4):
+            with open('temp_dalle_{0}.jpg'.format(i), 'rb') as f:
+                files_to_send.append(discord.File(f))
+        await context.channel.send(files=files_to_send)
+    except Exception:
+        context.channel.send(Exception)
 
 @bot.event
 async def on_ready():
