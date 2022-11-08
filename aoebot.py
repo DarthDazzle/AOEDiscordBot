@@ -34,31 +34,28 @@ class Taunter(commands.Cog):
         self.files = files
         self.suntzus = suntzus
         
-
-
-    @commands.Cog.listener()
-    async def on_message(self, message):
-        if(message.content.isdigit()):
-            if message.author.voice == None:
-                await message.author.send("Joina en voice channel din tönt!")
-                await message.delete()
-                return
-            if not self.vc:
-                self.vc = await message.author.voice.channel.connect()
-            elif(self.vc.channel != message.author.voice.channel):
-                if self.vc:
-                    await self.vc.disconnect()
-                self.vc = await message.author.voice.channel.connect()
-            username = str(message.author).split('#')[0]
-            if username in user_timeouts:
-                if user_timeouts[username] < datetime.today().timestamp():
-                    user_timeouts.pop(username)
-                else:
-                    await message.author.send("Chilla fan")
-            if username not in user_timeouts:
-                self.vc.play(discord.FFmpegPCMAudio("taunts/" + self.files[message.content]))
-                user_timeouts[username] = datetime.today().timestamp() + 5
+    async def play_taunt(self, message):
+        if(message.content.isdigit() == False):
+            return
+        if message.author.voice == None:
+            await message.author.send("Joina en voice channel din tönt!")
             await message.delete()
+            return
+        if not self.vc:
+            self.vc = await message.author.voice.channel.connect()
+        elif(self.vc not in bot.voice_clients):
+            self.vc = await message.author.voice.channel.connect()
+        username = str(message.author).split('#')[0]
+        if username in user_timeouts:
+            if user_timeouts[username] < datetime.today().timestamp():
+                user_timeouts.pop(username)
+            else:
+                await message.author.send("Chilla fan")
+        if username not in user_timeouts:
+            self.vc.play(discord.FFmpegPCMAudio("taunts/" + self.files[message.content]))
+            user_timeouts[username] = datetime.today().timestamp() + 5
+        await message.delete()
+    async def play_suntzu(self, message):
         if "sun tzu" in message.content:
             if message.author.voice == None:
                 await message.author.send("Joina en voice channel din tönt!")
@@ -79,6 +76,16 @@ class Taunter(commands.Cog):
             if username not in user_timeouts:
                 self.vc.play(discord.FFmpegPCMAudio("suntzu/" + random.choice(self.suntzus)))
                 user_timeouts[username] = datetime.today().timestamp() + 10
+
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        try:
+            await self.play_taunt(message)
+            await self.play_suntzu(message)
+        except Exception as e:
+            await message.channel.send(e)
+
+
 
 bot = commands.Bot(command_prefix='!', help_command=None)
 
@@ -126,11 +133,13 @@ async def Aunts(context):
 async def skapa(context, args):
     nn = 1
     try:
-        await context.channel.send("Skapar Fantastiska Bilder!")
+        await context.channel.send("Skapar Fantastiska Bilder! Använder input: \n{0}".format(args))
+        
         response = openai.Image.create(
             prompt=args,
             n=nn,
-            size="1024x1024"
+            size="1024x1024",
+            user = context.message.author.name
         )
         allImgs = response["data"]
         i = 0
@@ -144,13 +153,17 @@ async def skapa(context, args):
             with open('temp_dalle_{0}.jpg'.format(i), 'rb') as f:
                 files_to_send.append(discord.File(f))
         await context.channel.send(files=files_to_send)
-    except Exception:
-        context.channel.send(Exception)
+    except Exception as e:
+        await context.channel.send(e)
 
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user} (ID: {bot.user.id})')
     print('------')
+
+@bot.event
+async def on_disconnect():
+    print('Disconnected')
 
 f = []
 dir_path = os.getcwd() + "/suntzu/"
