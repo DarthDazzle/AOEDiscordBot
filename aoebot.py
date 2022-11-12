@@ -51,12 +51,16 @@ class Taunter(commands.Cog):
                 user_timeouts.pop(username)
             else:
                 await message.author.send("Chilla fan")
+                await message.delete()
                 return False
 
         user_timeouts[username] = datetime.today().timestamp() + 5
         return True
 
     async def play_taunt(self, message: Message) -> None:
+        if message.content not in self.files:
+            return
+
         self.vc.play(discord.FFmpegPCMAudio("taunts/" + self.files[message.content]))
         await message.delete()
 
@@ -66,16 +70,20 @@ class Taunter(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: Message) -> None:
+        # Dont reply to ourselves or other bots
+        if message.author.bot:
+            return
+
         try:
+            # Check that user is eligible to send a command to the bot
+            if not await self.check_user_eligible(message):
+                return
+
             # If the bot is not connected to the same voice channel, we connect it
             if not self.vc:
                 self.vc = await message.author.voice.channel.connect()
             elif self.vc not in bot.voice_clients:
                 self.vc = await message.author.voice.channel.connect()
-
-            # Check that user is eligible to send a command to the bot
-            if not await self.check_user_eligible(message):
-                return
 
             # Execute the command
             if message.content.isdigit():
@@ -85,6 +93,7 @@ class Taunter(commands.Cog):
                 await self.play_suntzu(message)
 
         except Exception as e:
+            logging.getLogger(__name__).exception("Got an exception: ")
             await message.channel.send(e)
 
 
