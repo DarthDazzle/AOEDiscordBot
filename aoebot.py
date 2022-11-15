@@ -142,48 +142,12 @@ async def Aunts(context):
     with open("aunts.jpg", "rb") as f:
         picture = discord.File(f)
         await context.channel.send(file=picture)
-
-
-@bot.command()
-async def peckel(context, args):
-    try:
-        # ANTI OLAV
-        if context.author.id == 268484310992945152:
-            return
-
-        p = pathlib.Path("peckel.txt")
-        if not p.exists():
-            p.touch()
-
-        with p.open("r") as f:
-            prev = f.readlines()
-            peckel = args.replace('"', "")
-            peckel = f"{peckel}\n"
-            prev.append(peckel)
-
-        with p.open("w") as f:
-            f.writelines(prev)
-
-    finally:
-        await context.message.delete()
-
+        
 
 @bot.command()
 async def skapa(context, args):
     nn = 1
     try:
-        p = pathlib.Path("peckel.txt")
-        if p.exists():
-            with p.open("r") as f:
-                forbidden_words = f.readlines()
-                for w in forbidden_words:
-                    if (
-                        w.replace('"', "").replace("\n", "")
-                        in context.message.content.lower()
-                    ):
-            await context.author.send("INGET JÄVLA ÄCKELPÄCKEL")
-            return
-
         await context.channel.send(
             "Skapar Fantastiska Bilder! Använder input: \n{0}".format(args)
         )
