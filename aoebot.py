@@ -148,6 +148,10 @@ async def Aunts(context):
 async def skapa(context, args):
     nn = 1
     try:
+        if "trypophobia" in context.message.content.lower():
+            await context.author.send("INGET JÄVLA ÄCKELPÄCKEL")
+            return
+
         await context.channel.send(
             "Skapar Fantastiska Bilder! Använder input: \n{0}".format(args)
         )
