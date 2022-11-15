@@ -145,10 +145,42 @@ async def Aunts(context):
 
 
 @bot.command()
+async def peckel(context, args):
+    try:
+        # ANTI OLAV
+        if context.author.id == 268484310992945152:
+            return
+
+        p = pathlib.Path("peckel.txt")
+        if not p.exists():
+            p.touch()
+
+        with p.open("r") as f:
+            prev = f.readlines()
+            peckel = args.replace('"', "")
+            peckel = f"{peckel}\n"
+            prev.append(peckel)
+
+        with p.open("w") as f:
+            f.writelines(prev)
+
+    finally:
+        await context.message.delete()
+
+
+@bot.command()
 async def skapa(context, args):
     nn = 1
     try:
-        if "trypophobia" in context.message.content.lower():
+        p = pathlib.Path("peckel.txt")
+        if p.exists():
+            with p.open("r") as f:
+                forbidden_words = f.readlines()
+                for w in forbidden_words:
+                    if (
+                        w.replace('"', "").replace("\n", "")
+                        in context.message.content.lower()
+                    ):
             await context.author.send("INGET JÄVLA ÄCKELPÄCKEL")
             return
 
