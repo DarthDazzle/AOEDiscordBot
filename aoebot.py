@@ -147,10 +147,6 @@ async def Aunts(context):
 @bot.command()
 async def peckel(context, args):
     try:
-        # ANTI OLAV
-        if context.author.id == 268484310992945152:
-            return
-
         p = pathlib.Path("peckel.txt")
         if not p.exists():
             p.touch()
