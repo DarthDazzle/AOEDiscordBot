@@ -73,7 +73,7 @@ class Taunter(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: Message) -> None:
         # Dont reply to ourselves or other bots
-        if message.author.bot:
+        if message.author.bot or message.channel.type.name == "private":
             return
 
         try:
@@ -143,26 +143,61 @@ async def Aunts(context):
     with open("aunts.jpg", "rb") as f:
         picture = discord.File(f)
         await context.channel.send(file=picture)
-        
+
 
 @bot.command()
 async def peckel(context, args):
-    try:
-        p = pathlib.Path("peckel.txt")
-        if not p.exists():
-            p.touch()
+    # ANTI OLAV
+    if context.author.id == 268484310992945152:
+        await context.author.send("SCHAS")
+        return
 
-        with p.open("r") as f:
-            prev = f.readlines()
-            peckel = args.replace('"', "").replace(" ", "")
+    p = pathlib.Path("peckel.txt")
+    if not p.exists():
+        p.touch()
+
+    with p.open("r") as f:
+        prev = f.readlines()
+        peckel = args.replace('"', "").replace(" ", "")
+        if peckel:
             peckel = f"{peckel}\n"
             prev.append(peckel)
 
-        with p.open("w") as f:
-            f.writelines(prev)
+    with p.open("w") as f:
+        f.writelines(prev)
 
-    finally:
-        await context.message.delete()
+    await context.author.send(f"La till ord: {peckel}")
+
+
+@bot.command()
+async def peckel_remove(context):
+    # ANTI OLAV
+    if context.author.id == 268484310992945152:
+        await context.author.send("SCHAS")
+        return
+
+    p = pathlib.Path("peckel.txt")
+    p.unlink(missing_ok=True)
+
+    await context.author.send("peckel.txt borttagen")
+
+
+@bot.command()
+async def peckel_status(context):
+    # ANTI OLAV
+    if context.author.id == 268484310992945152:
+        await context.author.send("SCHAS")
+        return
+
+    p = pathlib.Path("peckel.txt")
+    if not p.exists():
+        await context.author.send("peckel.txt finns inte!")
+        return
+
+    with p.open("r") as f:
+        peckels = f.read()
+        await context.author.send("Följande peckels finns:")
+        await context.author.send(peckels)
 
 
 @bot.command()
