@@ -154,7 +154,7 @@ async def peckel(context, args):
 
         with p.open("r") as f:
             prev = f.readlines()
-            peckel = args.replace('"', "")
+            peckel = args.replace('"', "").replace(" ", "")
             peckel = f"{peckel}\n"
             prev.append(peckel)
 
@@ -174,10 +174,7 @@ async def skapa(context, args):
             with p.open("r") as f:
                 forbidden_words = f.readlines()
                 for w in forbidden_words:
-                    if (
-                        w.replace('"', "").replace("\n", "")
-                        in context.message.content.lower()
-                    ):
+                    if w.replace("\n", "") in args.lower():
                         await context.author.send("INGET JÄVLA ÄCKELPÄCKEL")
                         return
 
