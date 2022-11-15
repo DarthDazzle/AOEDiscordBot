@@ -73,7 +73,7 @@ class Taunter(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: Message) -> None:
         # Dont reply to ourselves or other bots
-        if message.author.bot:
+        if message.author.bot or message.channel.type.name == "private":
             return
 
         try:
@@ -147,7 +147,11 @@ async def Aunts(context):
 
 @bot.command()
 async def peckel(context, args):
-    try:
+    # ANTI OLAV
+    if context.author.id == 268484310992945152:
+        await context.author.send("SCHAS")
+        return
+
         p = pathlib.Path("peckel.txt")
         if not p.exists():
             p.touch()
@@ -155,14 +159,41 @@ async def peckel(context, args):
         with p.open("r") as f:
             prev = f.readlines()
             peckel = args.replace('"', "").replace(" ", "")
+        if peckel:
             peckel = f"{peckel}\n"
             prev.append(peckel)
 
         with p.open("w") as f:
             f.writelines(prev)
 
-    finally:
-        await context.message.delete()
+
+@bot.command()
+async def peckel_remove(context):
+    # ANTI OLAV
+    if context.author.id == 268484310992945152:
+        await context.author.send("SCHAS")
+        return
+
+    p = pathlib.Path("peckel.txt")
+    p.unlink(missing_ok=True)
+
+
+@bot.command()
+async def peckel_status(context):
+    # ANTI OLAV
+    if context.author.id == 268484310992945152:
+        await context.author.send("SCHAS")
+        return
+
+    p = pathlib.Path("peckel.txt")
+    if not p.exists():
+        await context.author.send("peckel.txt finns inte!")
+        return
+
+    p = pathlib.Path("peckel.txt")
+    with p.open("r") as f:
+        peckels = f.read()
+        await context.author.send(peckels)
 
 
 @bot.command()
