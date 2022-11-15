@@ -168,7 +168,7 @@ async def peckel(context, args):
 @bot.command()
 async def peckel_remove(context):
     # ANTI OLAV
-    if context.author.id == 268484310992945152:
+    if context.author.id == 268484310992945153:
         await context.author.send("SCHAS")
         return
 
@@ -181,7 +181,7 @@ async def peckel_remove(context):
 @bot.command()
 async def peckel_status(context):
     # ANTI OLAV
-    if context.author.id == 268484310992945152:
+    if context.author.id == 268484310992945153:
         await context.author.send("SCHAS")
         return
 
