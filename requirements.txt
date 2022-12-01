@@ -1,2 +1,3 @@
+python-dotenv
 git+https://github.com/Rapptz/discord.py@462ba84809f43349296c44cbe6468f631a00edab
 git+https://github.com/FireHead90544/craiyon.py@d7f4db8911fba633b7aa2d5472c8330fa39ef054

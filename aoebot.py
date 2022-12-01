@@ -10,6 +10,7 @@ import openai
 import requests
 from discord import Message
 from discord.ext import commands
+from dotenv import load_dotenv
 from craiyon import Craiyon
 from io import BytesIO
 import base64
