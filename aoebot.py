@@ -6,8 +6,7 @@ from datetime import datetime
 from os import walk
 
 import discord
-import openai
-import requests
+from PIL import Image
 from discord import Message
 from discord.ext import commands
 from dotenv import load_dotenv
@@ -24,6 +23,31 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 TOKEN = os.getenv("DISCORD_API")
 
 user_timeouts = {}
+
+
+def merge_images(file1, file2, file3):
+    """Merge three images into one, displayed side by side
+    :param file1: path to first image file
+    :param file2: path to second image file
+    :param file3: path to third image file
+    :return: the merged Image object
+    """
+    image1 = Image.open(file1)
+    image2 = Image.open(file2)
+    image3 = Image.open(file3)
+
+    (width1, height1) = image1.size
+    (width2, height2) = image2.size
+    (width3, height3) = image3.size
+
+    result_width = width1 + width2 + width3
+    result_height = max([height1, height2, height3])
+
+    result = Image.new("RGB", (result_width, result_height))
+    result.paste(im=image1, box=(0, 0))
+    result.paste(im=image2, box=(width1, 0))
+    result.paste(im=image3, box=(width1 + width2, 0))
+    return result
 
 
 @client.event
@@ -218,10 +242,17 @@ async def skapa(context, args):
         generator = Craiyon()  # Instantiates the api wrapper
         result = await generator.async_generate(args)  # Generate 9 images
         images = result.images  # A list containing image data as base64 encoded strings
-        for i in images:
-            image = BytesIO(base64.decodebytes(i.encode("utf-8")))
-            # Use the PIL's Image object as per your needs
-            await context.channel.send(file=discord.File(image, "dalle.png"))
+
+        for i in range(0, len(images), 3):
+            big_image = merge_images(
+                BytesIO(base64.decodebytes(images[i].encode("utf-8"))),
+                BytesIO(base64.decodebytes(images[i + 1].encode("utf-8"))),
+                BytesIO(base64.decodebytes(images[i + 2].encode("utf-8"))),
+            )
+            with BytesIO() as image_binary:
+                big_image.save(image_binary, format="PNG")
+                image_binary.seek(0)
+                await context.channel.send(file=discord.File(image_binary, "dalle.png"))
 
     except Exception as e:
         logging.getLogger(__name__).exception("Got an exception: ")
