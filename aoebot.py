@@ -10,7 +10,9 @@ import openai
 import requests
 from discord import Message
 from discord.ext import commands
-from dotenv import load_dotenv
+from craiyon import Craiyon
+from io import BytesIO
+import base64
 
 # https://discord.com/api/oauth2/authorize?client_id=904040817965031464&permissions=2172928&scope=bot
 client = discord.Client()
@@ -202,7 +204,6 @@ async def peckel_status(context):
 
 @bot.command()
 async def skapa(context, args):
-    nn = 1
     try:
         p = pathlib.Path("peckel.txt")
         if p.exists():
@@ -217,21 +218,14 @@ async def skapa(context, args):
             "Skapar Fantastiska Bilder! Använder input: \n{0}".format(args)
         )
 
-        response = openai.Image.create(
-            prompt=args, n=nn, size="1024x1024", user=context.message.author.name
-        )
-        allImgs = response["data"]
-        i = 0
-        for img in allImgs:
-            img_data = requests.get(img["url"]).content
-            with open("temp_dalle_{0}.jpg".format(i), "wb") as handler:
-                handler.write(img_data)
-            i = i + 1
-        files_to_send: list[discord.File] = []
-        for i in range(nn):
-            with open("temp_dalle_{0}.jpg".format(i), "rb") as f:
-                files_to_send.append(discord.File(f))
-        await context.channel.send(files=files_to_send)
+        generator = Craiyon()  # Instantiates the api wrapper
+        result = await generator.async_generate(args)  # Generate 9 images
+        images = result.images  # A list containing image data as base64 encoded strings
+        for i in images:
+            image = BytesIO(base64.decodebytes(i.encode("utf-8")))
+            # Use the PIL's Image object as per your needs
+            await context.channel.send(file=discord.File(image, "dalle.png"))
+
     except Exception as e:
         logging.getLogger(__name__).exception("Got an exception: ")
         await context.channel.send(e)
