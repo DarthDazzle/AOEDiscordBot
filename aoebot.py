@@ -19,7 +19,6 @@ client = discord.Client()
 
 load_dotenv()
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
 TOKEN = os.getenv("DISCORD_API")
 
 user_timeouts = {}
