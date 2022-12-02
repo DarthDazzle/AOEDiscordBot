@@ -1,18 +1,22 @@
+import asyncio
+import base64
+import concurrent.futures
 import logging
-import pathlib
 import os
+import pathlib
 import random
 from datetime import datetime
+from functools import partial
+from io import BytesIO
 from os import walk
+from typing import List
 
 import discord
-from PIL import Image
+from craiyon import Craiyon
 from discord import Message
 from discord.ext import commands
 from dotenv import load_dotenv
-from craiyon import Craiyon
-from io import BytesIO
-import base64
+from PIL import Image
 
 # https://discord.com/api/oauth2/authorize?client_id=904040817965031464&permissions=2172928&scope=bot
 client = discord.Client()
@@ -24,29 +28,29 @@ TOKEN = os.getenv("DISCORD_API")
 user_timeouts = {}
 
 
-def merge_images(file1, file2, file3):
-    """Merge three images into one, displayed side by side
-    :param file1: path to first image file
-    :param file2: path to second image file
-    :param file3: path to third image file
-    :return: the merged Image object
+def merge_images(image_buffers: List[BytesIO]) -> BytesIO:
     """
-    image1 = Image.open(file1)
-    image2 = Image.open(file2)
-    image3 = Image.open(file3)
+    Merges 9 images together into a 3x3 grid, assumes that the incoming
+    images have the same size
+    Returns a BytesIO object containing the merged image buffer
+    """
+    images = [Image.open(b) for b in image_buffers]
+    width, height = images[0].size
 
-    (width1, height1) = image1.size
-    (width2, height2) = image2.size
-    (width3, height3) = image3.size
-
-    result_width = width1 + width2 + width3
-    result_height = max([height1, height2, height3])
+    result_width = width * 3
+    result_height = height * 3
 
     result = Image.new("RGB", (result_width, result_height))
-    result.paste(im=image1, box=(0, 0))
-    result.paste(im=image2, box=(width1, 0))
-    result.paste(im=image3, box=(width1 + width2, 0))
-    return result
+
+    for idx in range(0, 3):
+        result.paste(im=images[idx * 3 + 0], box=(width * 0, height * idx))
+        result.paste(im=images[idx * 3 + 1], box=(width * 1, height * idx))
+        result.paste(im=images[idx * 3 + 2], box=(width * 2, height * idx))
+
+    image_binary = BytesIO()
+    result.save(image_binary, format="PNG")
+    image_binary.seek(0)
+    return image_binary
 
 
 @client.event
@@ -240,18 +244,21 @@ async def skapa(context, args):
 
         generator = Craiyon()  # Instantiates the api wrapper
         result = await generator.async_generate(args)  # Generate 9 images
-        images = result.images  # A list containing image data as base64 encoded strings
 
-        for i in range(0, len(images), 3):
-            big_image = merge_images(
-                BytesIO(base64.decodebytes(images[i].encode("utf-8"))),
-                BytesIO(base64.decodebytes(images[i + 1].encode("utf-8"))),
-                BytesIO(base64.decodebytes(images[i + 2].encode("utf-8"))),
+        image_buffers = [
+            BytesIO(base64.decodebytes(image.encode("utf-8")))
+            for image in result.images
+        ]
+
+        loop = asyncio.get_running_loop()
+
+        # Creating the 3x3 image takes some time and is CPU bound, therefore we run
+        # it in another process and await it
+        with concurrent.futures.ProcessPoolExecutor():
+            big_image_buf = await loop.run_in_executor(
+                None, partial(merge_images, image_buffers)
             )
-            with BytesIO() as image_binary:
-                big_image.save(image_binary, format="PNG")
-                image_binary.seek(0)
-                await context.channel.send(file=discord.File(image_binary, "dalle.png"))
+        await context.channel.send(file=discord.File(big_image_buf, "dalle.png"))
 
     except Exception as e:
         logging.getLogger(__name__).exception("Got an exception: ")
@@ -269,35 +276,34 @@ async def on_disconnect():
     print("Disconnected")
 
 
-f = []
-dir_path = os.getcwd() + "/suntzu/"
-suntzu = {}
-i = 0
-for (dirpath, dirnames, filenames) in walk(dir_path):
+if __name__ == "__main__":
+    f = []
+    dir_path = os.getcwd() + "/suntzu/"
+    suntzu = {}
+    i = 0
+    for (dirpath, dirnames, filenames) in walk(dir_path):
 
-    for f in filenames:
-        try:
-            if f.split(".")[1] == "mp3":
-                suntzu[i] = f
-                i += 1
-        except:
-            f = f
-            # print(f)
+        for f in filenames:
+            try:
+                if f.split(".")[1] == "mp3":
+                    suntzu[i] = f
+                    i += 1
+            except:
+                f = f
 
-f = []
-dir_path = os.getcwd() + "/taunts/"
-print(dir_path)
-files = {}
-for (dirpath, dirnames, filenames) in walk(dir_path):
-    for f in filenames:
-        try:
-            if f.split(".")[1] == "ogg" or f.split(".")[1] == "mp3":
-                number = f.split("_")[0]
-                files[number] = f
-        except:
-            f = f
-            # print(f)
+    f = []
+    dir_path = os.getcwd() + "/taunts/"
+    print(dir_path)
+    files = {}
+    for (dirpath, dirnames, filenames) in walk(dir_path):
+        for f in filenames:
+            try:
+                if f.split(".")[1] == "ogg" or f.split(".")[1] == "mp3":
+                    number = f.split("_")[0]
+                    files[number] = f
+            except:
+                f = f
 
-bot.add_cog(Taunter(bot, files, suntzu))
+    bot.add_cog(Taunter(bot, files, suntzu))
 
-bot.run(TOKEN)
+    bot.run(TOKEN)
