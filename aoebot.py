@@ -9,6 +9,8 @@ import time
 import threading
 import requests
 import subprocess
+import pickle
+import aiohttp
 
 from datetime import datetime
 from functools import partial
@@ -63,7 +65,7 @@ lazyDict2 = {
     ".tenex": "55",
     "sarazodd": "132"
 }
-#intents = discord.Intents(messages=True, guilds=True)
+
 intents = discord.Intents.default()
 intents.members = True
 intents.guilds  = True
@@ -72,13 +74,13 @@ intents.typing = True
 intents.messages = True
 intents.message_content = True
 
+files = {}
 
 tsm = "<:tillsammans:908711034511044618>"
 allt= "<:alltid:908711034632683593>"
 cats = {tsm, allt}
 
 bot = commands.Bot(command_prefix="/", help_command=None, intents=intents)
-files = {}
 #tree= app_commands.CommandTree(bot)
 
 
@@ -130,14 +132,29 @@ def merge_images(image_buffers: List[BytesIO]) -> BytesIO:
 
 
 class Taunter(commands.Cog):
-    def __init__(self, bot, files, suntzus) -> None:
+    def __init__(self, bot, files, suntzus, taunt_counts) -> None:
         self.bot = bot
         self.vc = None
         self.files = files
+        self.taunt_counts = taunt_counts
         self.task = None
         self.cat = None
         self.suntzus = suntzus
         self.lastMessage = None
+        self.save_task = asyncio.create_task(self.periodic_save())
+
+    async def save_counts(self):
+        try:
+            with open("taunt_counts.pickle", 'wb') as f:
+                pickle.dump(self.taunt_counts, f)
+            logging.info("Saved taunt counts")
+        except Exception as e:
+            logging.error(f"Error saving taunt counts: {e}")
+
+    async def periodic_save(self):
+        while True:
+            await asyncio.sleep(600)  # 10 minutes
+            await self.save_counts()
 
     async def check_user_eligible(self, author: Member) -> bool:
         """
@@ -166,6 +183,7 @@ class Taunter(commands.Cog):
         return True
       
     async def play_taunt(self, taunt, pitch) -> None:
+
         if taunt not in self.files:
             return
         if pitch:
@@ -221,6 +239,7 @@ class Taunter(commands.Cog):
                         float(split_msg[1])
                     except:
                         return
+                    
                 taunt = split_msg[0]
                 pitch = None
                 try:
@@ -233,6 +252,10 @@ class Taunter(commands.Cog):
                   pass
                 except ValueError:
                   logging.getLogger(__name__).exception("Pitch must be floatable, <0 for random pitch")
+
+                if int(taunt) < 0 or int(taunt) > 999:
+                    return
+                self.taunt_counts[int(taunt)] += 1
 
                 await self.play_taunt(taunt, pitch)
                 await message.delete()
@@ -292,7 +315,10 @@ class Taunter(commands.Cog):
         except Exception as e:
             print(e)
             logging.getLogger(__name__).exception("Got an exception: ")
-
+            
+    def cog_unload(self):
+        self.save_task.cancel()
+        asyncio.create_task(self.save_counts())  # Final save on unload
 
 @bot.tree.command(name = "taunts", description="Sends you a message with all available taunts")
 async def taunts(context):
@@ -390,6 +416,38 @@ async def start(context, server: str):
         logging.getLogger(__name__).exception("Got an exception: ")
         await context.channel.send(e)
 
+@bot.tree.command(name="top_taunts", description="Shows the most and least used taunts")
+async def top_taunts(context):
+    try:
+        # Get taunts with non-zero counts
+        active_taunts = [(i, count) for i, count in enumerate(bot.get_cog('Taunter').taunt_counts) if count > 0]
+        
+        if not active_taunts:
+            await context.response.send_message("No taunts have been used yet!", ephemeral=True)
+            return
+
+        # Sort by count
+        sorted_taunts = sorted(active_taunts, key=lambda x: x[1], reverse=True)
+        total_uses = sum(count for _, count in active_taunts)
+
+        # Format message
+        message = "**Top 5 Most Used Taunts:**\n```"
+        for taunt_id, count in sorted_taunts[:5]:
+            percentage = (count / total_uses) * 100
+            message += f"#{taunt_id}: {count} uses ({percentage:.1f}%)\n"
+
+        message += "```\n**Least Used Taunts:**\n```"
+        for taunt_id, count in sorted_taunts[-5:]:
+            percentage = (count / total_uses) * 100
+            message += f"#{taunt_id}: {count} uses ({percentage:.1f}%)\n"
+        message += "```"
+
+        await context.response.send_message(message, ephemeral=True)
+
+    except Exception as e:
+        logging.getLogger(__name__).exception("Got an exception: ")
+        await context.response.send_message(f"Error: {str(e)}", ephemeral=True)
+
 @bot.tree.command(name = "skapa", description="Creates very nice images through Craiyon")
 async def skapa(context, args: str):
     try:
@@ -441,8 +499,25 @@ async def do_stuff_every_x_seconds(timeout):
         await asyncio.sleep(timeout)
         await update_status()
 
+async def check_internet():
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get('https://8.8.8.8', timeout=5) as response:
+                return response.status == 200
+    except:
+        return False
+
+async def wait_for_internet(max_attempts=50, delay=5):
+    for attempt in range(max_attempts):
+        if await check_internet():
+            logging.info("Internet connection established")
+            return True
+        logging.warning(f"Waiting for internet... attempt {attempt + 1}/{max_attempts}")
+        await asyncio.sleep(delay)
+    raise ConnectionError("Could not establish internet connection")
+
 async def main():
-    f = []
+    # Load Sun Tzu quotes
     dir_path = os.getcwd() + "/suntzu/"
     suntzu = {}
     i = 0
@@ -456,9 +531,7 @@ async def main():
             except:
                 f = f
 
-    f = []
     dir_path = os.getcwd() + "/taunts/"
-    print(dir_path)
     for (dirpath, dirnames, filenames) in walk(dir_path):
         for f in filenames:
             try:
@@ -467,10 +540,30 @@ async def main():
                     files[number] = f
             except:
                 f = f
-    time.sleep(5) #Lazy, wait for internet
+
+        # Add pickle file handling
+    PICKLE_FILE = os.path.join(os.getcwd(), "taunt_counts.pickle")
+    try:
+        with open(PICKLE_FILE, 'rb') as f:
+            taunt_counts = pickle.load(f)
+    except FileNotFoundError:
+        taunt_counts = [0] * 999
+        with open(PICKLE_FILE, 'wb') as f:
+            pickle.dump(taunt_counts, f)
+        logging.info("Created new taunt_counts.pickle file")
+    except Exception as e:
+        logging.error(f"Error loading taunt counts: {e}")
+        taunt_counts = [0] * 999
+
+    try:
+        await wait_for_internet()
+    except ConnectionError as e:
+        logging.error(f"Failed to connect to internet: {e}")
+        return
+    
     task = asyncio.create_task(do_stuff_every_x_seconds(60))
     async with bot:
-        await bot.add_cog(Taunter(bot, files, suntzu))
+        await bot.add_cog(Taunter(bot, files, suntzu, taunt_counts))
         await bot.start(TOKEN)
 
 asyncio.run(main())
