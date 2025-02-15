@@ -190,6 +190,8 @@ class Taunter(commands.Cog):
             self.vc.play(discord.FFmpegPCMAudio("taunts/" + self.files[taunt], options=f"-af asetrate=44100*{pitch},aresample=44100,atempo=1/{pitch}"))
         else:
             self.vc.play(discord.FFmpegPCMAudio("taunts/" + self.files[taunt]))
+            
+        self.taunt_counts[int(taunt)] += 1
 
     async def play_suntzu(self, message: Message) -> None:
         self.vc.play(discord.FFmpegPCMAudio("suntzu/" + random.choice(self.suntzus)))
@@ -255,7 +257,6 @@ class Taunter(commands.Cog):
 
                 if int(taunt) < 0 or int(taunt) > 999:
                     return
-                self.taunt_counts[int(taunt)] += 1
 
                 await self.play_taunt(taunt, pitch)
                 await message.delete()
