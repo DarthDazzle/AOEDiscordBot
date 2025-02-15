@@ -442,7 +442,7 @@ async def top_taunts(context):
             message += f"#{taunt_id}: {count} uses ({percentage:.1f}%)\n"
         message += "```"
 
-        await context.response.send_message(message, ephemeral=True)
+        await context.response.send_message(message, ephemeral=False)
 
     except Exception as e:
         logging.getLogger(__name__).exception("Got an exception: ")
