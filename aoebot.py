@@ -46,7 +46,9 @@ lazyDict = {
     "mangeee": "<:hajp:896056974905602049>",
     "amandasofia9485": "<:mandy:1206331809604837476>",
     ".tenex": "<:caaaarl:1208752788318847027>",
-    "sarazodd": "<:zod:1296168810511990854>"
+    "sarazodd": "<:zod:1296168810511990854>",
+    "cho11o": "<:bongo:898283899493433384>",
+    "rilleboi": "<:monster:903686408651296769>"
 }
 
 lazyDict2 = {
@@ -63,7 +65,9 @@ lazyDict2 = {
     "mangeee": "669",
     "amandasofia9485": "101",
     ".tenex": "55",
-    "sarazodd": "132"
+    "sarazodd": "132",
+    "cho11o": "38",
+    "rilleboi": "53"
 }
 
 intents = discord.Intents.default()
