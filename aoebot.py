@@ -365,30 +365,25 @@ async def taints(context):
 
 async def update_status():
     try:
-        txt = "server host for: "
-        anyRunning = False
-
-        if checkIfProcessRunning('VRising'):
-            txt = txt + "Vrising ,"
-            anyRunning = True
-        if checkIfProcessRunning('java'):
-            txt = txt + "Minecraft ,"
-            anyRunning = True
-        if checkIfProcessRunning('enshrouded'):
-            txt = txt + "Enshrouded ,"
-            anyRunning = True
-        if checkIfProcessRunning('valheim'):
-            txt = txt + "Valheim ,"
-            anyRunning = True
-        if checkIfProcessRunning('Main Thread'):
-            txt = txt + "Terraria ,"
-            anyRunning = True
-        txt = txt[:-1]
+        running_games = []
         
-        if anyRunning == False:
+        if checkIfProcessRunning('VRising'):
+            running_games.append("VRising")
+        if checkIfProcessRunning('java'):
+            running_games.append("Minecraft")
+        if checkIfProcessRunning('enshrouded'):
+            running_games.append("Enshrouded")
+        if checkIfProcessRunning('valheim'):
+            running_games.append("Valheim")
+        if checkIfProcessRunning('Main Thread'):
+            running_games.append("Terraria")
+        
+        if running_games:
+            txt = " | ".join(running_games)
+        else:
             txt = random.choice(euphemisms)
-        activ = discord.Game(txt)
-
+            
+        activ = discord.Activity(type = discord.ActivityType.competing, name = txt)
         await bot.change_presence(status=discord.Status.online, activity=activ)
         return txt
     except Exception as e:
