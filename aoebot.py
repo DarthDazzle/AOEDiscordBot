@@ -30,7 +30,18 @@ from dotenv import load_dotenv
 from PIL import Image
 import psutil
 
-euphemisms = ["a solo game", "with oneself", "a one-person sport", "a private symphony", "a tantalizing one-man show", "stealthy solo escapade", "sensuous solo tango", "an intimate rendezvous with oneself", "the one-handed piano", "tug of war with the cyclops"] 
+euphemisms = [
+    "thumb wars",
+    "solitaire championships",
+    "competitive napping",
+    "professional procrastination",
+    "solo hide and seek",
+    "extreme daydreaming",
+    "meditation marathon",
+    "competitive cloud watching",
+    "single player tag",
+    "paper-rock-scissors against mirror"
+]
 
 lazyDict = {
     "dirtydazzle": "<:vik:1061396237200404542>",
@@ -48,7 +59,8 @@ lazyDict = {
     ".tenex": "<:caaaarl:1208752788318847027>",
     "sarazodd": "<:zod:1296168810511990854>",
     "cho11o": "<:bongo:898283899493433384>",
-    "rilleboi": "<:monster:903686408651296769>"
+    "rilleboi": "<:monster:903686408651296769>",
+    "soph_85349": "<:nolove:908730069936132178>"
 }
 
 lazyDict2 = {
@@ -67,7 +79,8 @@ lazyDict2 = {
     ".tenex": "55",
     "sarazodd": "132",
     "cho11o": "38",
-    "rilleboi": "53"
+    "rilleboi": "53",
+    "soph_85349": "56"
 }
 
 intents = discord.Intents.default()
