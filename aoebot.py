@@ -374,6 +374,9 @@ async def update_status():
         if checkIfProcessRunning('java'):
             txt = txt + "Minecraft ,"
             anyRunning = True
+        if checkIfProcessRunning('enshrouded'):
+            txt = txt + "Enshrouded ,"
+            anyRunning = True
         if checkIfProcessRunning('valheim'):
             txt = txt + "Valheim ,"
             anyRunning = True
