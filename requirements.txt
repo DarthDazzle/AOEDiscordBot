@@ -3,5 +3,4 @@ python-dotenv
 discord
 craiyon.py==1.2.0
 PyNaCl
-discord-py-interactions
 psutil

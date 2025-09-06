@@ -181,7 +181,11 @@ class Taunter(commands.Cog):
         if author.voice == None:
             await author.send("Joina en voice channel din tönt!")
             return False
-
+        
+        # Check if the author is the bot itself
+        if author == self.bot.user:
+            return False
+        
         # If the bot is not connected to the same voice channel, we connect it
         if not self.vc and author.voice:
             self.vc = await author.voice.channel.connect()
