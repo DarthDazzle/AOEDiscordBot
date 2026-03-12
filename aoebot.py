@@ -60,7 +60,8 @@ lazyDict = {
     "sarazodd": "<:zod:1296168810511990854>",
     "cho11o": "<:bongo:898283899493433384>",
     "rilleboi": "<:monster:903686408651296769>",
-    "soph_85349": "<:nolove:908730069936132178>"
+    "soph_85349": "<:nolove:908730069936132178>",
+    "_ceder": "<:cum:895726544696246312>"
 }
 
 lazyDict2 = {
@@ -80,7 +81,8 @@ lazyDict2 = {
     "sarazodd": "132",
     "cho11o": "38",
     "rilleboi": "53",
-    "soph_85349": "56"
+    "soph_85349": "56",
+    "_ceder": "24"
 }
 
 intents = discord.Intents.default()
