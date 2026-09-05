@@ -8,7 +8,7 @@ En Discord-bot som spelar taunts, visar spelserverstatus och genererar AI-bilder
 - **Sun Tzu**: Skriv något med "sun tzu" i så spelas ett slumpat citat.
 - **Röstroster**: När någon joinar/lämnar voice postas en emoji-lista över vem som är där, och kända användare får sin signaturtaunt spelad.
 - **Serverstatus**: Botens status visar vilka spelservrar (docker compose-stackar) som kör. `/start` startar en.
-- **Bildgenerering**: `/skapa` via [pollinations.ai](https://pollinations.ai). Nämn (@) folk i prompten så används deras avatarer som referensbilder (kräver API-nyckel, se nedan).
+- **Bildgenerering**: `/skapa` via Gemini (betald, veckobudget) eller gratis via [pollinations.ai](https://pollinations.ai). Nämn (@) folk i prompten så används deras avatarer som referensbilder (kräver API-nyckel, se nedan).
 
 ## Kommandon
 
@@ -27,10 +27,14 @@ Kopiera `.env.example` till `.env` och fyll i. Viktigast:
 DISCORD_API=din_discord_token
 STATUS_CHANNEL_ID=895733929808650311
 COMPOSE_FILE_VALHEIM=/srv/valheim        # fil eller mapp med docker-compose.yml
+GEMINI_API_KEY=                          # valfritt, betald: https://aistudio.google.com/apikey
+IMAGE_WEEKLY_LIMIT=50                    # betalda bilder per vecka (mån-sön), 0 = obegränsat
 POLLINATIONS_API_KEY=                    # valfritt, gratis: https://enter.pollinations.ai/keys
 ```
 
-Utan `POLLINATIONS_API_KEY` fungerar `/skapa` ändå, men bara text-till-bild (modell `flux`, en bild per 15 s). Med nyckel används `klein` med avatarer som referens och `flux` som fallback.
+Med `GEMINI_API_KEY` använder `/skapa` `gemini-3.1-flash-image` i 512px (ca 4,5 cent per bild) med avatarer som karaktärsreferenser. Räknaren sparas i `data/image_usage.json` och nollställs varje måndag; `IMAGE_USER_WEEKLY_LIMIT` sätter dessutom ett tak per användare. Misslyckas Gemini faller boten tillbaka på pollinations.
+
+Utan Gemini-nyckel går allt via pollinations. Utan `POLLINATIONS_API_KEY` fungerar bara text-till-bild (modell `flux`, en bild per 15 s). Med nyckel används `klein` med avatarer som referens och `flux` som fallback.
 
 Ljudfiler i `taunts/` ska heta `<nummer>_<namn>.mp3|ogg`. `suntzu/` innehåller citaten. Taunt-statistik sparas i `data/taunt_counts.json` (gammal `taunt_counts.pickle` migreras automatiskt).
 
