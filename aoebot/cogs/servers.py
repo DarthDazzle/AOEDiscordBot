@@ -29,20 +29,24 @@ def resolve_compose_file(path: Path) -> Path | None:
     return None
 
 
-async def run_compose(compose_file: Path, *args: str, timeout: float) -> tuple[int, str]:
-    """Run ``docker compose -f <file> <args>`` without blocking the event loop."""
+async def run_compose(compose_file: Path, *args: str, timeout: float) -> tuple[int, str, str]:
+    """Run ``docker compose -f <file> <args>`` without blocking the event loop.
+
+    Returns (exit code, stdout, stderr). Keep them apart: compose prints
+    warnings (e.g. obsolete ``version`` attribute) on stderr even on success.
+    """
     proc = await asyncio.create_subprocess_exec(
         "docker", "compose", "-f", str(compose_file), *args,
         stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.STDOUT,
+        stderr=asyncio.subprocess.PIPE,
     )
     try:
-        out, _ = await asyncio.wait_for(proc.communicate(), timeout=timeout)
+        out, err = await asyncio.wait_for(proc.communicate(), timeout=timeout)
     except asyncio.TimeoutError:
         proc.kill()
         await proc.wait()
-        return 124, f"timed out after {timeout:.0f}s"
-    return proc.returncode or 0, out.decode(errors="replace").strip()
+        return 124, "", f"timed out after {timeout:.0f}s"
+    return proc.returncode or 0, out.decode(errors="replace").strip(), err.decode(errors="replace").strip()
 
 
 class Servers(commands.Cog):
@@ -63,9 +67,9 @@ class Servers(commands.Cog):
         self.status_loop.cancel()
 
     async def is_running(self, name: str) -> bool:
-        code, out = await run_compose(self.servers[name], "ps", "--status", "running", "-q", timeout=30)
+        code, out, err = await run_compose(self.servers[name], "ps", "--status", "running", "-q", timeout=30)
         if code != 0:
-            log.warning("docker compose ps failed for %s (exit %d): %s", name, code, out[:300])
+            log.warning("docker compose ps failed for %s (exit %d): %s", name, code, err[:300])
             return False
         return bool(out)
 
@@ -82,6 +86,7 @@ class Servers(commands.Cog):
 
     async def update_status(self) -> str:
         running = await self.refresh_running()
+        log.info("Running servers: %s", ", ".join(sorted(running)) or "none")
         text = " | ".join(sorted(n.title() for n in running)) if running else random.choice(config.EUPHEMISMS)
         activity = discord.Activity(type=discord.ActivityType.competing, name=text)
         await self.bot.change_presence(status=discord.Status.online, activity=activity)
@@ -130,11 +135,12 @@ class Servers(commands.Cog):
             await interaction.followup.send(f"{name.title()} is already running", ephemeral=True)
             return
         log.info("%s requested start of %s", interaction.user, name)
-        code, out = await run_compose(self.servers[name], "up", "-d", timeout=900)
+        code, out, err = await run_compose(self.servers[name], "up", "-d", timeout=900)
         if code != 0:
-            log.error("docker compose up failed for %s (exit %d): %s", name, code, out)
+            log.error("docker compose up failed for %s (exit %d): %s %s", name, code, out, err)
+            detail = (out + "\n" + err).strip()[-1500:] or "no output"
             await interaction.followup.send(
-                f"Failed to start {name.title()} (exit {code}):\n```\n{out[-1500:] or 'no output'}\n```",
+                f"Failed to start {name.title()} (exit {code}):\n```\n{detail}\n```",
                 ephemeral=True,
             )
             return
