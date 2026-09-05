@@ -160,23 +160,26 @@ class Images(commands.Cog):
         Returns (image bytes, mime type, number of references used).
         """
         model = config.GEMINI_IMAGE_MODEL
-        parts: list[dict[str, str]] = []
-        names: list[str] = []
+        # Interleave label and image so each avatar is bound to its name by
+        # adjacency rather than by "image N is ..." counting.
+        items: list[dict[str, str]] = [{"type": "text", "text": prompt}]
+        refs = 0
         for member in members:
             avatar = await self.fetch_avatar(member)
             if avatar is None:
                 continue
-            parts.append({"type": "image", "mime_type": "image/png",
+            items.append({"type": "text", "text": f"This is {member.display_name}:"})
+            items.append({"type": "image", "mime_type": "image/png",
                           "data": base64.b64encode(avatar).decode("ascii")})
-            names.append(member.display_name)
-        text = prompt
-        if names:
-            listing = ", ".join(f"image {i} is {name}" for i, name in enumerate(names, 1))
-            text = (f"{prompt}\n\nThe attached images are profile pictures of the people named in the "
-                    f"prompt: {listing}. Keep each of them clearly recognisable.")
+            refs += 1
+        if refs:
+            items.append({"type": "text", "text": (
+                "The pictures above are the profile pictures of the people named in the prompt. "
+                "Depict each named person so they are clearly recognisable from their picture."
+            )})
         body = {
             "model": model,
-            "input": [{"type": "text", "text": text}, *parts],
+            "input": items,
             "response_format": {
                 "type": "image",
                 "mime_type": "image/jpeg",
@@ -206,7 +209,7 @@ class Images(commands.Cog):
                     usage = payload.get("usage") or {}
                     log.info("Gemini %s: %s tokens out, %s in", model,
                              usage.get("total_output_tokens"), usage.get("total_input_tokens"))
-                    return base64.b64decode(item["data"]), item.get("mime_type", "image/jpeg"), len(parts)
+                    return base64.b64decode(item["data"]), item.get("mime_type", "image/jpeg"), refs
                 if item.get("type") == "text":
                     texts.append(item.get("text", ""))
         errors = "; ".join(e.get("message", "") for e in payload.get("errors") or [])
