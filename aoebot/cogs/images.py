@@ -194,12 +194,21 @@ class Images(commands.Cog):
                     detail = payload.get("error", {}).get("message")
                 raise ImageGenerationError(f"{model}: HTTP {resp.status} {detail or str(payload)[:300]}")
 
+        # Response shape (verified live): steps[] -> {"type": "model_output",
+        # "content": [{"type": "image", "mime_type", "data"}]}; a refusal comes
+        # back as a "text" content item instead.
         texts: list[str] = []
-        for item in payload.get("outputs") or []:
-            if item.get("type") == "image" and item.get("data"):
-                return base64.b64decode(item["data"]), item.get("mime_type", "image/jpeg"), len(parts)
-            if item.get("type") == "text":
-                texts.append(item.get("text", ""))
+        for step in payload.get("steps") or []:
+            if step.get("type") != "model_output":
+                continue
+            for item in step.get("content") or []:
+                if item.get("type") == "image" and item.get("data"):
+                    usage = payload.get("usage") or {}
+                    log.info("Gemini %s: %s tokens out, %s in", model,
+                             usage.get("total_output_tokens"), usage.get("total_input_tokens"))
+                    return base64.b64decode(item["data"]), item.get("mime_type", "image/jpeg"), len(parts)
+                if item.get("type") == "text":
+                    texts.append(item.get("text", ""))
         errors = "; ".join(e.get("message", "") for e in payload.get("errors") or [])
         detail = errors or " ".join(texts).strip() or f"status={payload.get('status')} keys={sorted(payload)}"
         raise ImageGenerationError(f"{model}: no image returned ({detail[:300]})")
