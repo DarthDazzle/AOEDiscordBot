@@ -1,79 +1,70 @@
 # AoeBot - Discord Röst & Taunt Bot
 
-En Discord-bot som spelar taunts, övervakar serverstatus och genererar AI-bilder med Craiyon.
+En Discord-bot som spelar taunts, visar spelserverstatus och genererar AI-bilder.
 
 ## Funktioner
 
-- **Taunt-system**: Spela Age of Empires taunts i röstkanaler med tonhöjdskontroll
-- **Serverövervakning**: Övervakar aktiva spelservrar (VRising, Minecraft, Valheim, Terraria, Enshrouded)
-- **Bildgenerering**: Skapar bilder med Craiyon AI
-- **Anpassade röstkommandon**: Spelar Sun Tzu-citat och hanterar särskilda emoji-interaktioner
-
-## Installation
-
-1. Installera dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-2. Konfigurera miljövariabler i 
-
-.env
-
-:
-```env
-DISCORD_API=din_discord_token
-COMPOSE_FILE_VRISING=/sökväg/till/vrising
-COMPOSE_FILE_VALHEIM=/sökväg/till/valheim
-COMPOSE_FILE_ENSHROUDED=/sökväg/till/enshrouded
-COMPOSE_FILE_MINECRAFT=/sökväg/till/minecraft
-```
-
-3. Skapa nödvändiga mappar:
-- 
-
-taunts
-
- - För lagring av .ogg/.mp3 taunt-filer
-- 
-
-suntzu
-
- - För lagring av Sun Tzu-citat ljudfiler
+- **Taunt-system**: Skriv ett nummer i chatten (t.ex. `13`, eller `13 0.8` för pitch 0.5–2.0, `13 -1` för slumpad pitch) så spelas taunten i din röstkanal, precis som i Age of Empires. Meddelandet raderas efteråt.
+- **Sun Tzu**: Skriv något med "sun tzu" i så spelas ett slumpat citat.
+- **Röstroster**: När någon joinar/lämnar voice postas en emoji-lista över vem som är där, och kända användare får sin signaturtaunt spelad.
+- **Serverstatus**: Botens status visar vilka spelservrar (docker compose-stackar) som kör. `/start` startar en.
+- **Bildgenerering**: `/skapa` via [pollinations.ai](https://pollinations.ai). Nämn (@) folk i prompten så används deras avatarer som referensbilder (kräver API-nyckel, se nedan).
 
 ## Kommandon
 
-- `/taunts` - Lista alla tillgängliga ljudtaunts
-- `/aunts` - Visa tant-bilder (kräver aunts.jpg)
-- `/taints` - Visa taints-video (kräver taints.mp4)
-- `/status_update` - Tvinga statusuppdatering av server
-- `/start [server]` - Starta en specifik spelserver
-- `/skapa [prompt]` - Generera AI-bilder med Craiyon
+- `/taunts` - Lista alla taunts (privat svar)
+- `/top_taunts` - Mest och minst använda taunts
+- `/status_update` - Uppdatera serverstatus nu
+- `/start <server>` - Starta en spelserver (autocomplete)
+- `/skapa <prompt>` - Generera en bild
+- `/aunts`, `/taints` - Fina tanter respektive stjärt
 
-## Användning
+## Konfiguration
 
-Starta boten:
-```bash
-python aoebot.py
+Kopiera `.env.example` till `.env` och fyll i. Viktigast:
+
+```env
+DISCORD_API=din_discord_token
+STATUS_CHANNEL_ID=895733929808650311
+COMPOSE_FILE_VALHEIM=/srv/valheim        # fil eller mapp med docker-compose.yml
+POLLINATIONS_API_KEY=                    # valfritt, gratis: https://enter.pollinations.ai/keys
 ```
 
-## Dependencies
+Utan `POLLINATIONS_API_KEY` fungerar `/skapa` ändå, men bara text-till-bild (modell `flux`, en bild per 15 s). Med nyckel används `klein` med avatarer som referens och `flux` som fallback.
 
-Se requirements.txt för fullständig lista över dependencies:
-- discord.py
-- python-dotenv
-- craiyon.py
-- Pillow
-- psutil
-- PyNaCl
+Ljudfiler i `taunts/` ska heta `<nummer>_<namn>.mp3|ogg`. `suntzu/` innehåller citaten. Taunt-statistik sparas i `data/taunt_counts.json` (gammal `taunt_counts.pickle` migreras automatiskt).
+
+## Köra med Docker (rekommenderat)
+
+```bash
+cp .env.example .env   # fyll i
+docker compose up -d --build
+docker compose logs -f
+```
+
+Compose-filen monterar `taunts/`, `suntzu/`, `data/` och dockersocketen. Varje `COMPOSE_FILE_*`-mapp måste dessutom monteras på **samma sökväg** inne i containern (se kommentaren i `docker-compose.yml`), annars hittar boten inte spelservrarnas compose-filer.
+
+## Köra utan Docker
+
+Kräver Python 3.10+, `ffmpeg` och `libopus` (`apt install ffmpeg libopus0`) samt docker CLI med compose-plugin.
+
+```bash
+pip install -r requirements.txt
+python -m aoebot
+```
 
 ## Filstruktur
 ```
 .
-├── aoebot.py
-├── requirements.txt
-├── .env
-├── taunts/
-├── suntzu/
-└── .gitignore
+├── aoebot/
+│   ├── bot.py            # start, intents, cog-registrering
+│   ├── config.py         # miljövariabler, kända användare, emojis
+│   └── cogs/
+│       ├── taunts.py     # röst, nummer-taunts, roster, /taunts, /top_taunts
+│       ├── servers.py    # docker compose-status, /start, /status_update
+│       └── images.py     # /skapa, /aunts, /taints
+├── taunts/  suntzu/  data/
+├── Dockerfile  docker-compose.yml
+├── requirements.txt  .env.example
+└── aunts.jpg  taints.mp4
 ```

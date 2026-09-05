@@ -1,0 +1,16 @@
+services:
+  aoebot:
+    build: .
+    image: aoebot
+    container_name: aoebot
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./taunts:/app/taunts:ro
+      - ./suntzu:/app/suntzu:ro
+      - ./data:/app/data
+      # Lets /start and the status loop drive the other compose stacks.
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Every COMPOSE_FILE_<NAME> directory from .env must be mounted at the
+      # SAME path inside the container.
+      - /media/mainStorage/games:/media/mainStorage/games:ro
