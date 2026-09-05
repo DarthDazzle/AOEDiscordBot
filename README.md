@@ -6,7 +6,7 @@ En Discord-bot som spelar taunts, visar spelserverstatus och genererar AI-bilder
 
 - **Taunt-system**: Skriv ett nummer i chatten (t.ex. `13`, eller `13 0.8` för pitch 0.5–2.0, `13 -1` för slumpad pitch) så spelas taunten i din röstkanal, precis som i Age of Empires. Meddelandet raderas efteråt.
 - **Sun Tzu**: Skriv något med "sun tzu" i så spelas ett slumpat citat.
-- **Röstroster**: När någon joinar/lämnar voice postas en emoji-lista över vem som är där, och kända användare får sin signaturtaunt spelad.
+- **Röstroster**: När någon joinar/lämnar voice postas en emoji-lista över vem som är i röstkanalerna (`|` mellan kanaler), och kända användare får sin signaturtaunt spelad. Listan överlever omstarter via `data/roster.json`.
 - **Serverstatus**: Botens status visar vilka spelservrar (docker compose-stackar) som kör. `/start` startar en.
 - **Bildgenerering**: `/skapa` via Gemini (betald, veckobudget) eller gratis via [pollinations.ai](https://pollinations.ai). Nämn (@) folk i prompten så används deras avatarer som referensbilder (kräver API-nyckel, se nedan).
 

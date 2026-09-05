@@ -84,8 +84,13 @@ class Taunter(commands.Cog):
         self._save_task: asyncio.Task | None = None
 
         self.cooldowns: dict[int, float] = {}  # user id -> monotonic deadline
-        self.roster_message: discord.Message | None = None
         self._voice_lock = asyncio.Lock()
+
+        # Roster message id and text survive restarts so the stale message can
+        # be removed and an unchanged roster is not reposted.
+        self.roster_path = config.DATA_DIR / "roster.json"
+        self.roster_lock = asyncio.Lock()
+        self.roster_message_id, self.roster_posted = self._load_roster()
 
         self.cat_task: asyncio.Task | None = None
         self.cat_expected: str | None = None
@@ -209,7 +214,7 @@ class Taunter(commands.Cog):
             log.debug("Could not reply in %s", message.channel, exc_info=True)
 
     @staticmethod
-    async def delete_quietly(message: discord.Message) -> None:
+    async def delete_quietly(message: discord.Message | discord.PartialMessage) -> None:
         try:
             await message.delete()
         except (discord.NotFound, discord.Forbidden):
@@ -290,13 +295,20 @@ class Taunter(commands.Cog):
             return  # mute/deafen/stream changes
         try:
             await self.disconnect_if_alone(member.guild)
-            channel = after.channel or before.channel
-            if channel is not None:
-                await self.update_roster(channel)
+            await self.update_roster()
             if after.channel is not None and not member.bot:
                 await self.play_join_taunt(member, after.channel)
         except Exception:
             log.exception("Error handling voice state update for %s", member)
+
+    @commands.Cog.listener()
+    async def on_ready(self) -> None:
+        # After a restart: drop the roster left by the previous process and
+        # post the current one (no-op if nothing changed).
+        try:
+            await self.update_roster()
+        except Exception:
+            log.exception("Roster refresh on ready failed")
 
     async def disconnect_if_alone(self, guild: discord.Guild) -> None:
         vc = guild.voice_client
@@ -305,18 +317,53 @@ class Taunter(commands.Cog):
                 log.info("Alone in %s, disconnecting", vc.channel)
                 await vc.disconnect()
 
-    async def update_roster(self, channel: discord.VoiceChannel | discord.StageChannel) -> None:
-        names = "".join(
-            config.KNOWN_USERS[m.name][0] for m in channel.members if m.name in config.KNOWN_USERS
-        )
+    def _load_roster(self) -> tuple[int | None, str]:
+        try:
+            with open(self.roster_path, encoding="utf-8") as f:
+                data = json.load(f)
+            message_id = data.get("message_id")
+            return (int(message_id) if message_id else None), str(data.get("text", ""))
+        except FileNotFoundError:
+            return None, ""
+        except (OSError, ValueError, AttributeError):
+            log.warning("Could not read %s", self.roster_path, exc_info=True)
+            return None, ""
+
+    def _write_roster(self) -> None:
+        self.roster_path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = self.roster_path.with_suffix(".json.tmp")
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump({"message_id": self.roster_message_id, "text": self.roster_posted}, f)
+        tmp.replace(self.roster_path)
+
+    @staticmethod
+    def roster_text(guild: discord.Guild) -> str:
+        """Known users' emojis for every populated voice channel, ' | ' between channels."""
+        groups: list[str] = []
+        for channel in (*guild.voice_channels, *guild.stage_channels):
+            emojis = "".join(
+                config.KNOWN_USERS[m.name][0] for m in channel.members if m.name in config.KNOWN_USERS
+            )
+            if emojis:
+                groups.append(emojis)
+        return " | ".join(groups)
+
+    async def update_roster(self) -> None:
+        """Replace the roster message in the status channel if the roster changed."""
         text_channel = self.bot.get_channel(config.STATUS_CHANNEL_ID)
-        if not isinstance(text_channel, discord.abc.Messageable):
+        if not isinstance(text_channel, discord.TextChannel):
             return
-        if self.roster_message is not None:
-            await self.delete_quietly(self.roster_message)
-            self.roster_message = None
-        if names:
-            self.roster_message = await text_channel.send(names)
+        async with self.roster_lock:
+            text = self.roster_text(text_channel.guild)
+            if text == self.roster_posted:
+                return
+            if self.roster_message_id is not None:
+                await self.delete_quietly(text_channel.get_partial_message(self.roster_message_id))
+                self.roster_message_id = None
+            if text:
+                self.roster_message_id = (await text_channel.send(text)).id
+            self.roster_posted = text
+            await asyncio.to_thread(self._write_roster)
 
     async def play_join_taunt(self, member: discord.Member,
                               channel: discord.VoiceChannel | discord.StageChannel) -> None:
