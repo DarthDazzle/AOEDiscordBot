@@ -32,7 +32,7 @@ IMAGE_WEEKLY_LIMIT=50                    # betalda bilder per vecka (mån-sön),
 POLLINATIONS_API_KEY=                    # valfritt, gratis: https://enter.pollinations.ai/keys
 ```
 
-Med `GEMINI_API_KEY` använder `/skapa` `gemini-3.1-flash-image` i 512px (ca 4,5 cent per bild) med avatarer som karaktärsreferenser. Räknaren sparas i `data/image_usage.json` och nollställs varje måndag; `IMAGE_USER_WEEKLY_LIMIT` sätter dessutom ett tak per användare. Misslyckas Gemini faller boten tillbaka på pollinations.
+Med `GEMINI_API_KEY` använder `/skapa` `gemini-3.1-flash-image` i 1K (ca 7 cent per bild; 512px kostar lika mycket) med avatarer som karaktärsreferenser. Räknaren sparas i `data/image_usage.json` och nollställs varje måndag; `IMAGE_USER_WEEKLY_LIMIT` sätter dessutom ett tak per användare. Misslyckas Gemini faller boten tillbaka på pollinations.
 
 Utan Gemini-nyckel går allt via pollinations. Utan `POLLINATIONS_API_KEY` fungerar bara text-till-bild (modell `flux`, en bild per 15 s). Med nyckel används `klein` med avatarer som referens och `flux` som fallback.
 

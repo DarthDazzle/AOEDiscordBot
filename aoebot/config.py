@@ -39,12 +39,12 @@ IMAGE_MODEL = os.getenv("IMAGE_MODEL", "klein" if POLLINATIONS_API_KEY else "flu
 IMAGE_FALLBACK_MODEL = os.getenv("IMAGE_FALLBACK_MODEL", "flux")
 IMAGE_MAX_REFERENCES = int(os.getenv("IMAGE_MAX_REFERENCES", "4"))
 
-# Gemini (paid, about $0.045 per 512px image with gemini-3.1-flash-image).
+# Gemini (paid, about $0.067 per image at 512 or 1K with gemini-3.1-flash-image).
 # When a key is set /skapa uses Gemini with avatars as character references
 # and only falls back to pollinations if Gemini fails.
 GEMINI_API_KEY: str | None = os.getenv("GEMINI_API_KEY") or None
 GEMINI_IMAGE_MODEL = os.getenv("GEMINI_IMAGE_MODEL", "gemini-3.1-flash-image")
-GEMINI_IMAGE_SIZE = os.getenv("GEMINI_IMAGE_SIZE", "512")  # 512, 1K, 2K or 4K
+GEMINI_IMAGE_SIZE = os.getenv("GEMINI_IMAGE_SIZE", "1K")  # 512, 1K, 2K or 4K; 512 and 1K bill the same
 # Paid images per ISO week (Monday-Sunday) for the whole server and per user.
 # 0 disables that cap.
 IMAGE_WEEKLY_LIMIT = int(os.getenv("IMAGE_WEEKLY_LIMIT", "50"))
