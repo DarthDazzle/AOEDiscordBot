@@ -14,3 +14,5 @@ services:
       # Every COMPOSE_FILE_<NAME> directory from .env must be mounted at the
       # SAME path inside the container.
       - /media/mainStorage/games:/media/mainStorage/games:ro
+      # bagoncooler lives outside the games folder
+      - /home/axel/bagoncoolergejm:/home/axel/bagoncoolergejm:ro
